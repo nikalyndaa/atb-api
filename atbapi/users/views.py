@@ -5,8 +5,10 @@ from rest_framework import viewsets,status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .serializers import LoginSerializer, UserSerializer, RegisterSerializer
-
 from .models import CustomUser
+from rest_framework.parsers import MultiPartParser, FormParser
+from .utils import save_custom_image
+from django.contrib.auth import authenticate
 
 FIRST_NAMES = ["Alice", "Bob", "Charlie", "Diana", "Eve", "Frank"]
 LAST_NAMES = ["Smith", "Johnson", "Brown", "Taylor", "Anderson", "Lee"]
@@ -40,6 +42,7 @@ def generate_random_users(n=5):
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
+    parser_classes = [MultiPartParser, FormParser]
 
     @action(detail=False,methods=['post'])
     def generate(self,request):
@@ -53,19 +56,40 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         if serializer.is_valid():
             username = serializer.validated_data['username']
             password = serializer.validated_data['password']
+            
             user = CustomUser.objects.filter(username=username)
             user = user.first()
             if not user:
                 return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
-
+            return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=False, methods=['post'], url_path='register',serializer_class=RegisterSerializer)
     def register(self, request):
-        serializer = RegisterSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            username = serializer.validated_data['username']
+            if CustomUser.objects.filter(username=username).exists():
+                return Response(
+                    {"error": "Користувач з таким нікнеймом вже існує."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user = CustomUser.objects.create_user(
+                username=username,
+                email=serializer.validated_data.get('email',''),
+                first_name=serializer.validated_data.get('first_name', ''),
+                last_name=serializer.validated_data.get('last_name', ''),
+                password=serializer.validated_data['password'],
+            )
+            image = serializer.validated_data.get('image')
+
+            if image:
+                user.image_small = save_custom_image(image, size=(300, 300), folder='small')
+                user.image_medium = save_custom_image(image, size=(800, 800), folder='medium')
+                user.image_large = save_custom_image(image, size=(1200, 1200), folder='large')
+            user.save()
 
             return Response(
                 serializer.data,

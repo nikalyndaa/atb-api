@@ -14,7 +14,13 @@ class LoginSerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
+    username = serializers.CharField()
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
+    email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
+    image = serializers.ImageField(write_only=True)
 
     class Meta:
         model = CustomUser
@@ -23,18 +29,15 @@ class RegisterSerializer(serializers.ModelSerializer):
             'email',
             'password',
             'first_name',
-            'last_name'
+            'last_name',
+            'confirm_password',
+            'image'
         ]
 
-    def create(self, validated_data):
-        user = CustomUser.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            password=validated_data['password'],
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', '')
-        )
-        return user
+    def validate(self, attrs):
+        if attrs['password'] != attrs['confirm_password']:
+            raise serializers.ValidationError({"confirm_password": "Паролі не збігаються."})
+        return attrs
 
     
 
