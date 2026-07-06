@@ -1,0 +1,4 @@
+echo "# Ignore venv and ide
+.venv/
+.idea/
+.env/" > .gitignore
