@@ -1,21 +1,26 @@
-import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import * as z from "zod";
 import {useForm} from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormInput } from "../components/FormInput";
 import { FormPasswordInput } from "../components/FormPasswordInput";
+import { useLoginMutation } from "../services/usersApi";
+import { useDispatch } from "react-redux";
+import { setUser } from "../store/authSlice";
+import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 
 
 
 const LoginPage = () => {
    
-    const [loading] = useState(false);
+    const [login, {isLoading}] = useLoginMutation()
+    const dispatch = useDispatch()
+    const navigate = useNavigate()
 
 
     const formSchema = z.object({
-        email: z
-            .email({ message: "Введіть коректну електронну пошту" }),
+        username: z
+            .string({ message: "Введіть правильний логін" }),
         password: z
             .string()
             .min(6, { message: "Пароль повинен містити щонайменше 6 символів" })
@@ -25,15 +30,30 @@ const LoginPage = () => {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues:{
-            email: "",
+            username: "",
             password: ""
         }
     })
 
-    const onSubmit = async(data: z.infer<typeof formSchema>) =>{
-        console.log(data);
+    const onSubmit = async (data: z.infer<typeof formSchema>) => {
+        try {
+            const user = await login({
+                username: data.username, 
+                password: data.password,
+            }).unwrap();
 
-    }
+            dispatch(setUser(user));
+            navigate("/");
+        } catch (err) {
+            const error = err as FetchBaseQueryError;
+
+            if (error.status === 401) {
+                form.setError("password", {
+                    message: "Невірний логін або пароль",
+                });
+            }
+            }
+    };
 
     // const handleSubmit = (e: React.FormEvent) => {
     //     e.preventDefault();
@@ -96,12 +116,11 @@ const LoginPage = () => {
 
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 
-                        {/* Email */}
                          <FormInput
                             control={form.control}
-                            name="email"
-                            label="Електронна адреса"
-                            placeholder="Введіть електронну адресу"
+                            name="username"
+                            label="Логін"
+                            placeholder="Введіть логін"
                          
                         />
 
@@ -131,7 +150,7 @@ const LoginPage = () => {
                         {/* Submit */}
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={isLoading}
                             className="
                                 w-full mt-2 py-2.5 px-4 rounded-xl text-sm font-semibold
                                 bg-gradient-to-r from-indigo-500 to-violet-600
@@ -144,7 +163,7 @@ const LoginPage = () => {
                                 flex items-center justify-center gap-2
                             "
                         >
-                            {loading ? (
+                            {isLoading ? (
                                 <>
                                     <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>

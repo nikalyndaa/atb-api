@@ -1,24 +1,29 @@
-import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import * as z from "zod";
 import {useForm} from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormInput } from "../components/FormInput";
 import { FormPasswordInput } from "../components/FormPasswordInput";
 import { FormAvatarInput } from "../components/FormAvatarInput";
+import { useDispatch } from "react-redux";
+import { useRegisterMutation } from "../services/usersApi";
+import { setUser } from "../store/authSlice";
 
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
 
 
 
 const RegisterPage = () => {
 
-    const [loading, ] = useState(false);
+    const [register, { isLoading }] = useRegisterMutation();
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
 
 
     const formSchema = z.object({
+
+        username: z.string({message: "Введіть логін"}),
         firstName: z.string({message: "Введіть ім'я"}),
         lastName: z.string({message: "Введіть прізвище"}),
         email: z.email({ message: "Введіть коректну електронну пошту" }),
@@ -26,9 +31,6 @@ const RegisterPage = () => {
         .instanceof(File, { message: "Оберіть зображення" })
         .refine(file => file.size <= MAX_FILE_SIZE, {
             message: "Розмір файлу не має перевищувати 5 МБ",
-        })
-        .refine(file => ACCEPTED_IMAGE_TYPES.includes(file.type), {
-            message: "Дозволені формати: JPG, PNG, WEBP",
         }),
         password: z
                     .string()
@@ -46,6 +48,7 @@ const RegisterPage = () => {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues:{
+            username: "",
             firstName: "",
             lastName: "",
             email: "",
@@ -55,10 +58,25 @@ const RegisterPage = () => {
         }
     })
 
-    const onSubmit = async(data: z.infer<typeof formSchema>) =>{
-        console.log(data);
+    const onSubmit = async (data: z.infer<typeof formSchema>) => {
+        try {
+            const user = await register({
+                username: data.username, 
+                first_name: data.firstName,
+                last_name: data.lastName,
+                email: data.email,
+                password: data.password,
+                confirm_password: data.confirmPassword,
+                image: data.image,
+            }).unwrap();
 
-    }
+            dispatch(setUser(user));
+            navigate("/");
+        } catch (err) {
+            console.error(err);
+
+        }
+    };
 
     return (
         <div className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12 relative">
@@ -95,6 +113,14 @@ const RegisterPage = () => {
 
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         {/* Grouping First & Last Name into modern 2 columns row */}
+                        
+                        <FormInput
+                                control={form.control}  
+                                name="username" 
+                                label="Логін"
+                                placeholder="Введіть логін"
+                            />
+                        
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             
                             <FormInput
@@ -150,10 +176,10 @@ const RegisterPage = () => {
                         {/* Submit */}
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={isLoading}
                             className="w-full mt-2 py-2.5 px-4 rounded-xl text-sm font-semibold bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/40 hover:scale-[1.01] disabled:opacity-70 disabled:cursor-not-allowed disabled:scale-100 transition-all duration-200 flex items-center justify-center gap-2"
                         >
-                            {loading ? (
+                            {isLoading ? (
                                 <>
                                     <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>

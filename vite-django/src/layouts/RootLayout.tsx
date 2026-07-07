@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link, useLocation } from "react-router";
 
+import { useSelector, useDispatch } from "react-redux";
+import type { RootState } from "../store";
+import { logout } from "../store/authSlice";
+
 const NAV_LINKS = [
     { label: "Головна", to: "/" },
     { label: "Про нас", to: "/about" },
@@ -30,6 +34,10 @@ const MoonIcon = () => (
 );
 
 const RootLayout = () => {
+    const dispatch = useDispatch();
+
+    const user = useSelector((state: RootState) => state.auth.user);
+
     const [dark, setDark] = useState(() => {
         if (typeof window !== "undefined") {
             return localStorage.getItem("theme") === "dark" ||
@@ -51,6 +59,7 @@ const RootLayout = () => {
         }
     }, [dark]);
 
+    console.log(user);
     return (
         <div className="min-h-screen flex flex-col  bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
             {/* Header */}
@@ -121,30 +130,60 @@ const RootLayout = () => {
                             </button>
 
                             {/* CTA */}
-                            <Link className="
+                            {user ? (
+                            <div className="flex items-center gap-3">
+
+                               {user.image_small && (
+                                            <img
+                                                src={`http://127.0.0.1:4099/images/small${user.image_small}`}
+                                                className="w-10 h-10 rounded-full object-cover"
+                                            />
+                                        )}
+                                
+                                <span className="font-medium">
+                                    {user.username}
+                                </span>
+
+                                <button
+                                    onClick={() => dispatch(logout())}
+                                    className="
+                                        px-4 py-2
+                                        rounded-xl
+                                        bg-red-500
+                                        text-white
+                                    "
+                                >
+                                    Вийти
+                                </button>
+
+                            </div>
+                        ) : (
+                            <>
+                                <Link to="/login"
+                                className="
                                 hidden md:flex items-center gap-2
                                 px-4 py-2 rounded-xl text-sm font-medium
                                 bg-gradient-to-r from-indigo-500 to-violet-600
                                 text-white shadow-md shadow-indigo-500/30
                                 hover:shadow-indigo-500/50 hover:scale-[1.02]
                                 transition-all duration-200
-                            "
-                                to={"/login"}
-                            >
-                                Увійти
-                            </Link>
-                            <Link className="
+                            ">
+                                    Увійти
+                                </Link>
+
+                                <Link to="/register"
+                                className="
                                 hidden md:flex items-center gap-2
                                 px-4 py-2 rounded-xl text-sm font-medium
                                 bg-gradient-to-r from-indigo-500 to-violet-600
                                 text-white shadow-md shadow-indigo-500/30
                                 hover:shadow-indigo-500/50 hover:scale-[1.02]
                                 transition-all duration-200
-                            "
-                                to={"/register"}
-                            >
-                                Зареєструватись
-                            </Link>
+                            ">
+                                    Зареєструватись
+                                </Link>
+                            </>
+                        )}
                         </div>
                     </div>
                 </div>

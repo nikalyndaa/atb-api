@@ -6,7 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .serializers import LoginSerializer, UserSerializer, RegisterSerializer
 from .models import CustomUser
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .utils import save_custom_image
 from django.contrib.auth import authenticate
 
@@ -42,7 +42,7 @@ def generate_random_users(n=5):
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, JSONParser,FormParser]
 
     @action(detail=False,methods=['post'])
     def generate(self,request):
@@ -55,13 +55,10 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             username = serializer.validated_data['username']
-            password = serializer.validated_data['password']
-            
-            user = CustomUser.objects.filter(username=username)
-            user = user.first()
+            password = serializer.validated_data['password']       
+            user = authenticate(username=username, password=password)
             if not user:
-                return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-
+                return Response({"detail": "Невірний логін або пароль"}, status=status.HTTP_401_UNAUTHORIZED)
             return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -92,7 +89,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
             user.save()
 
             return Response(
-                serializer.data,
+                UserSerializer(user).data,
                 status=status.HTTP_201_CREATED
             )
         
