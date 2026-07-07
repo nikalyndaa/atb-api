@@ -2,7 +2,8 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { BrowserRouter } from 'react-router'
-
+import {store} from './store'
+import { Provider } from 'react-redux'
 // document.documentElement.classList.add("dark");
 
 // Автоматично додає/прибирає клас .dark залежно від системної теми
@@ -17,7 +18,10 @@ import { BrowserRouter } from 'react-router'
 // window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme)
 
 createRoot(document.getElementById('root')!).render(
-  <BrowserRouter>
-    <App />
-  </BrowserRouter>,
+  <Provider store={store}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>,
+  </Provider>
+
 )

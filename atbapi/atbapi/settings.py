@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-ikgvaodvmvg&49t-9jr6d5-6frpo)cmhwr#0z4e12wrkf52%fu
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -50,6 +50,7 @@ REST_FRAMEWORK = {
  
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",  # має бути якомога вище
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -58,6 +59,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
 
 ROOT_URLCONF = 'atbapi.urls'
 
