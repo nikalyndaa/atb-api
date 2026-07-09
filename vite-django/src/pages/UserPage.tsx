@@ -2,7 +2,7 @@ import { Navigate, Link } from "react-router";
 import { useSelector } from "react-redux";
 import type { RootState } from "../store";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const BACKEND_URL = import.meta.env.VITE_API_URL;
 
 const UserPage = () => {
     const user = useSelector((state: RootState) => state.auth.user);
@@ -12,7 +12,7 @@ const UserPage = () => {
     }
 
     const avatarSrc = user.image_large
-        ? `${BACKEND_URL}/images/${user.image_large}`
+        ? `${BACKEND_URL}/images/large${user.image_large}`
         : null;
 
     const initials = `${user.first_name?.[0] ?? ""}${user.last_name?.[0] ?? ""}`.toUpperCase();
@@ -34,14 +34,19 @@ const UserPage = () => {
                     {/* Header block */}
                     <div className="flex items-center gap-5 mb-8">
                         <div className="
-                            w-20 h-20 rounded-full overflow-hidden flex-shrink-0
+                            w-28 h-28 rounded-full overflow-hidden flex-shrink-0
                             bg-gradient-to-br from-indigo-500 to-violet-600
                             flex items-center justify-center
                         ">
                             {avatarSrc ? (
-                                <img src={avatarSrc} alt={user.username} className="w-full h-full object-cover" />
+                                <img
+                                    src={avatarSrc}
+                                    className="w-full h-full object-cover"
+                                />
                             ) : (
-                                <span className="text-white text-2xl font-semibold">{initials || "?"}</span>
+                                <span className="text-white text-3xl font-semibold">
+                                    {initials || "?"}
+                                </span>
                             )}
                         </div>
                         <div>

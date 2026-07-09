@@ -6,8 +6,8 @@ import { FormInput } from "../components/FormInput";
 import { FormPasswordInput } from "../components/FormPasswordInput";
 import { useLoginMutation } from "../services/usersApi";
 import { useDispatch } from "react-redux";
-import { setUser } from "../store/authSlice";
 import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
+import { setCredentials } from "../store/authSlice";
 
 
 
@@ -37,12 +37,12 @@ const LoginPage = () => {
 
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
         try {
-            const user = await login({
+            const result = await login({
                 username: data.username, 
                 password: data.password,
             }).unwrap();
 
-            dispatch(setUser(user));
+            dispatch(setCredentials(result));
             navigate("/");
         } catch (err) {
             const error = err as FetchBaseQueryError;

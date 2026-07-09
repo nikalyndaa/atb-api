@@ -1,15 +1,19 @@
 import { useState, useEffect } from "react";
-import { Outlet, Link, useLocation } from "react-router";
+import { Outlet, Link, useLocation, useNavigate } from "react-router";
 
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../store";
 import { logout } from "../store/authSlice";
+import { useLogoutMutation } from "../services/usersApi";
 
 const NAV_LINKS = [
     { label: "Головна", to: "/" },
     { label: "Про нас", to: "/about" },
     { label: "Контакти", to: "/contact" },
 ];
+const BACKEND_URL = import.meta.env.VITE_API_URL;
+
+
 
 const SunIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
@@ -35,6 +39,10 @@ const MoonIcon = () => (
 
 const RootLayout = () => {
     const dispatch = useDispatch();
+    const [logoutMutation] = useLogoutMutation();
+    const navigate = useNavigate();
+    const refreshToken = useSelector((state: RootState) => state.auth.refreshToken);
+
 
     const user = useSelector((state: RootState) => state.auth.user);
 
@@ -47,6 +55,17 @@ const RootLayout = () => {
     });
 
     const location = useLocation();
+
+    const handleLogout = async() =>{
+        try{
+            if(refreshToken){
+                await logoutMutation({refresh: refreshToken}).unwrap()
+            }
+        } finally{
+            dispatch(logout())
+            navigate("/login")
+        }
+    };
 
     useEffect(() => {
         const root = document.documentElement;
@@ -135,18 +154,18 @@ const RootLayout = () => {
                                  <Link to="/profile" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                                {user.image_small && (
                                             <img
-                                                src={`http://127.0.0.1:4099/images/small${user.image_small}`}
+                                                src={`${BACKEND_URL}/images/small/${user?.image_small}`}
                                                 className="w-10 h-10 rounded-full object-cover"
+                                                alt={user?.username || "Аватар"}
                                             />
                                         )}
-                                
-                                <span className="font-medium">
+                                <span className=" font-bold text-slate-900 dark:text-slate-50">
                                     {user.username}
                                 </span>
                                     </Link>
 
                                 <button
-                                    onClick={() => dispatch(logout())}
+                                    onClick={handleLogout}
                                     className="
                                         px-4 py-2
                                         rounded-xl

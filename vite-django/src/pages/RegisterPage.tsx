@@ -7,7 +7,7 @@ import { FormPasswordInput } from "../components/FormPasswordInput";
 import { FormAvatarInput } from "../components/FormAvatarInput";
 import { useDispatch } from "react-redux";
 import { useRegisterMutation } from "../services/usersApi";
-import { setUser } from "../store/authSlice";
+import { setCredentials } from "../store/authSlice";
 
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 
@@ -70,7 +70,7 @@ const RegisterPage = () => {
                 image: data.image,
             }).unwrap();
 
-            dispatch(setUser(user));
+            dispatch(setCredentials(user));
             navigate("/");
         } catch (err) {
             console.error(err);

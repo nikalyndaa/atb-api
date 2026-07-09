@@ -1,10 +1,64 @@
-import {useGetUsersQuery} from "../services/usersApi.ts";
+import { useSelector } from "react-redux";
+import { Link } from "react-router";
+import type { RootState } from "../store";
+import { useGetUsersQuery } from "../services/usersApi";
 
 const HomePage = () => {
+    const user = useSelector((state: RootState) => state.auth.user);
 
-    const {data: myUsers, isLoading, isError} = useGetUsersQuery();
-    // console.log("My Users", myUsers);
+    // Запит виконується тільки якщо користувач залогінений
+    const { data: myUsers, isLoading, isError } = useGetUsersQuery(undefined, {
+        skip: !user,
+    });
 
+    // === Сторінка вітання для незалогінених ===
+    if (!user) {
+        return (
+            <div className="flex-1 flex items-center justify-center px-6">
+                <div className="max-w-xl text-center">
+                    <h1 className="
+                        text-4xl md:text-5xl font-bold tracking-tight
+                        text-slate-900 dark:text-slate-50
+                        mb-4
+                    ">
+                        Ласкаво просимо до КозакиApp
+                    </h1>
+                    <p className="text-slate-500 dark:text-slate-400 mb-8">
+                        Увійдіть або зареєструйтесь, щоб побачити список користувачів спільноти
+                    </p>
+                    <div className="flex items-center justify-center gap-3">
+                        <Link
+                            to="/login"
+                            className="
+                                px-5 py-2.5 rounded-xl text-sm font-medium
+                                bg-gradient-to-r from-indigo-500 to-violet-600
+                                text-white shadow-md shadow-indigo-500/30
+                                hover:shadow-indigo-500/50 hover:scale-[1.02]
+                                transition-all duration-200
+                            "
+                        >
+                            Увійти
+                        </Link>
+                        <Link
+                            to="/register"
+                            className="
+                                px-5 py-2.5 rounded-xl text-sm font-medium
+                                bg-slate-100 dark:bg-slate-800
+                                text-slate-700 dark:text-slate-300
+                                border border-slate-200 dark:border-slate-700
+                                hover:bg-slate-200 dark:hover:bg-slate-700
+                                transition-all duration-200
+                            "
+                        >
+                            Зареєструватись
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // === Список користувачів для залогінених (як було) ===
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
             <div className="max-w-4xl mx-auto px-6 py-5 text-center">
@@ -17,7 +71,6 @@ const HomePage = () => {
                 </h1>
             </div>
 
-            {/* Users table */}
             <div className="max-w-4xl mx-auto px-6 pb-20">
                 <div className="
                     rounded-2xl overflow-hidden
@@ -52,9 +105,9 @@ const HomePage = () => {
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {myUsers?.map((user) => (
+                                {myUsers?.map((u) => (
                                     <tr
-                                        key={user.id}
+                                        key={u.id}
                                         className="
                                                 border-b border-slate-100 dark:border-slate-800/60
                                                 last:border-b-0
@@ -62,10 +115,10 @@ const HomePage = () => {
                                                 transition-colors
                                             "
                                     >
-                                        <td className="px-6 py-3 text-slate-900 dark:text-slate-100">{user.email}</td>
-                                        <td className="px-6 py-3 text-slate-700 dark:text-slate-300">{user.first_name}</td>
-                                        <td className="px-6 py-3 text-slate-700 dark:text-slate-300">{user.last_name}</td>
-                                        <td className="px-6 py-3 text-slate-500 dark:text-slate-400">@{user.username}</td>
+                                        <td className="px-6 py-3 text-slate-900 dark:text-slate-100">{u.email}</td>
+                                        <td className="px-6 py-3 text-slate-700 dark:text-slate-300">{u.first_name}</td>
+                                        <td className="px-6 py-3 text-slate-700 dark:text-slate-300">{u.last_name}</td>
+                                        <td className="px-6 py-3 text-slate-500 dark:text-slate-400">@{u.username}</td>
                                     </tr>
                                 ))}
                                 </tbody>

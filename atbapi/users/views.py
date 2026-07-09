@@ -67,7 +67,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
             refresh = RefreshToken.for_user(user)
             
             return Response({
-                "user":UserSerializer(user, context={'request':request}).data,
+                "user":UserSerializer(user).data,
                 "access": str(refresh.access_token),
                 "refresh":str(refresh)
             },status=status.HTTP_200_OK)
@@ -97,8 +97,8 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
                 user.image_small = save_custom_image(image, size=(300, 300), folder='small')
                 user.image_medium = save_custom_image(image, size=(800, 800), folder='medium')
                 user.image_large = save_custom_image(image, size=(1200, 1200), folder='large')
-            user.save()
 
+            user.save()
             refresh = RefreshToken.for_user(user)
 
             return Response({

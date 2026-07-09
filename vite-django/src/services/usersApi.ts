@@ -4,6 +4,7 @@ import type {IUserItem} from "../types/users/IUserItem.ts";
 
 import type { IRegisterRequest } from "../types/users/IRegisterRequest.ts";
 import type { ILoginRequest } from "../types/users/ILoginRequest.ts";
+import type { IAuthResponse } from "../types/users/IAuthResponse.ts";
 
 export const usersApi = createApi({
     baseQuery: createBaseQuery('users'),
@@ -19,7 +20,7 @@ export const usersApi = createApi({
             }
         }),
 
-        login: builder.mutation<IUserItem, ILoginRequest>({
+        login: builder.mutation<IAuthResponse, ILoginRequest>({
             query: (userData) => ({
                 url: '/login/',
                 method: 'POST',
@@ -28,7 +29,7 @@ export const usersApi = createApi({
         }),
 
 
-        register: builder.mutation<IUserItem, IRegisterRequest>({
+        register: builder.mutation<IAuthResponse, IRegisterRequest>({
             query: (userData) => {
                 const formData = new FormData();
                 formData.append("username", userData.username)
@@ -47,6 +48,14 @@ export const usersApi = createApi({
                 }
             },
         }),
+
+        logout: builder.mutation<void, { refresh: string }>({
+            query: (body) => ({
+                url: '/logout/',
+                method: 'POST',
+                body,
+            }),
+        }),
     })
 });
 
@@ -54,4 +63,5 @@ export const {
     useGetUsersQuery,
     useLoginMutation,
     useRegisterMutation,
+    useLogoutMutation,
 } = usersApi;
