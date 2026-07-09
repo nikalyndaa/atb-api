@@ -1,7 +1,7 @@
 import random
-
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import render
-from rest_framework import viewsets,status
+from rest_framework import permissions, viewsets,status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .serializers import LoginSerializer, UserSerializer, RegisterSerializer
@@ -44,6 +44,11 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = UserSerializer
     parser_classes = [MultiPartParser, JSONParser,FormParser]
 
+    def get_permissions(self):
+        if self.action in ['login', 'register', 'generate']:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
     @action(detail=False,methods=['post'])
     def generate(self,request):
         users = generate_random_users(5)
@@ -59,7 +64,13 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
             user = authenticate(username=username, password=password)
             if not user:
                 return Response({"detail": "Невірний логін або пароль"}, status=status.HTTP_401_UNAUTHORIZED)
-            return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                "user":UserSerializer(user, context={'request':request}).data,
+                "access": str(refresh.access_token),
+                "refresh":str(refresh)
+            },status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=False, methods=['post'], url_path='register',serializer_class=RegisterSerializer)
@@ -88,14 +99,29 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
                 user.image_large = save_custom_image(image, size=(1200, 1200), folder='large')
             user.save()
 
-            return Response(
-                UserSerializer(user).data,
-                status=status.HTTP_201_CREATED
-            )
-        
+            refresh = RefreshToken.for_user(user)
+
+            return Response({
+                "user": UserSerializer(user, context={'request': request}).data,
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+            }, status=status.HTTP_201_CREATED)
+            
         return Response(
         serializer.errors,
         status=status.HTTP_400_BAD_REQUEST
     )
+
+
+
+    @action(detail=False, methods=['post'], url_path='logout', permission_classes=[permissions.IsAuthenticated])
+    def logout(self, request):
+        try:
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response(status=status.HTTP_205_RESET_CONTENT)
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 

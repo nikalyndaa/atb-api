@@ -132,7 +132,7 @@ const RootLayout = () => {
                             {/* CTA */}
                             {user ? (
                             <div className="flex items-center gap-3">
-
+                                 <Link to="/profile" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                                {user.image_small && (
                                             <img
                                                 src={`http://127.0.0.1:4099/images/small${user.image_small}`}
@@ -143,6 +143,7 @@ const RootLayout = () => {
                                 <span className="font-medium">
                                     {user.username}
                                 </span>
+                                    </Link>
 
                                 <button
                                     onClick={() => dispatch(logout())}

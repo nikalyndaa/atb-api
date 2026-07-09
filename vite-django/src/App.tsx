@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage.tsx";
 import RootLayout from './layouts/RootLayout.tsx';
 import LoginPage from './pages/LoginPage.tsx';
 import RegisterPage from './pages/RegisterPage.tsx';
+import UserPage from './pages/UserPage.tsx';
 
 function App() {
 
@@ -14,6 +15,7 @@ function App() {
               <Route index element={<HomePage/>}/>
               <Route path={'login'} element={<LoginPage/>}/>
               <Route path={'register'} element={<RegisterPage/>}/>
+              <Route path={'profile'} element={<UserPage/>}/>
              
           </Route>
       </Routes>
